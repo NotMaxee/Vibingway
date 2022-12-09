@@ -1,0 +1,36 @@
+{% extends "!layout.html" %}
+
+{% set show_source = False %}
+
+<!-- extra head fields-->
+
+{% block extrahead %}
+    <link href="{{ pathto('_static/style.css', True) }}" rel="stylesheet" type="text/css">
+    <meta name="description" content="Vibingway">
+    <meta name="author" content="Maxee">
+    <meta name="theme-color" content="#e26682">
+    <meta name="twitter:card" value="summary">
+    <meta name="twitter:title" content="Vibingway :: Documentation">
+    <meta name="twitter:description" content="Vibingway Documentation">
+    <meta name="twitter:image" content="{{ pathto('_images/html_favicon.png', True) }}">
+{% endblock %}
+
+<!-- custom html title -->
+
+{%- block htmltitle %}
+    {%- set titlesuffix = docstitle|e %}
+    <title>{{ docstitle|e }} :: {{ title|striptags|e }}</title>
+    
+{%- endblock %}
+
+<!-- custom footer contents -->
+
+{%- block footer %}
+    <div class="footer">
+        &copy; {{ copyright }}.
+        {% trans sphinx_version=sphinx_version|e %}Powered by <a href="http://sphinx-doc.org/">Sphinx</a> {{ sphinx_version }}.{% endtrans %}
+    </div>
+    {% if pagename == 'index' %}
+    </div>
+    {% endif %}
+{%- endblock %}

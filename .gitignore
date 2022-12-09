@@ -1,0 +1,10 @@
+
+
+# Directories
+logs
+docs/build
+
+# Files
+lavalink/Lavalink.jar
+lavalink/java17.exe
+config.py
