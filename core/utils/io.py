@@ -1,4 +1,5 @@
 import discord
+import functools
 
 __all__ = ("build_embed", "message", "success", "warning", "failure")
 
@@ -62,17 +63,14 @@ def build_embed(**kwargs):
     footer = kwargs.pop("footer", None)
     if isinstance(footer, dict):
         embed.set_footer(
-            text=footer.get("text", None),
-            icon_url=footer.get("icon_url", None)
+            text=footer.get("text", None), icon_url=footer.get("icon_url", None)
         )
     elif isinstance(author, str):
         embed.set_footer(text=footer)
 
     for field in kwargs.pop("fields", []):
         embed.add_field(
-            name=field["name"],
-            value=field["value"],
-            inline=field.get("inline", True)
+            name=field["name"], value=field["value"], inline=field.get("inline", True)
         )
 
     return embed
@@ -80,9 +78,9 @@ def build_embed(**kwargs):
 
 def message(description: str = None, **kwargs) -> discord.Embed:
     """Generate a :class:`discord.Embed` with the given `description`.
-    
+
     The colour of the generated embed will be set to ``0xE26682``.
-    
+
     Returns
     -------
     discord.Embed
@@ -93,35 +91,37 @@ def message(description: str = None, **kwargs) -> discord.Embed:
 
 def success(description: str = None, **kwargs) -> discord.Embed:
     """Generate a :class:`discord.Embed` with the given `description`.
-    
+
     The colour of the generated embed will be set to :func:`discord.Colour.green`.
-    
+
     Returns
     -------
     discord.Embed
         The generated embed.
     """
-    return build_embed(description=description,colour=discord.Colour.green(), **kwargs)
+    return build_embed(description=description, colour=discord.Colour.green(), **kwargs)
 
 
 def warning(description: str = None, **kwargs) -> discord.Embed:
     """Generate a :class:`discord.Embed` with the given `description`.
-    
+
     The colour of the generated embed will be set to :func:`discord.Colour.yellow`.
-    
+
     Returns
     -------
     discord.Embed
         The generated embed.
     """
-    return build_embed(description=description, colour=discord.Colour.yellow(), **kwargs)
+    return build_embed(
+        description=description, colour=discord.Colour.yellow(), **kwargs
+    )
 
 
 def failure(description: str = None, **kwargs) -> discord.Embed:
     """Generate a :class:`discord.Embed` with the given `description`.
-    
+
     The colour of the generated embed will be set to :func:`discord.Colour.red`.
-    
+
     Returns
     -------
     discord.Embed
@@ -132,35 +132,86 @@ def failure(description: str = None, **kwargs) -> discord.Embed:
 
 class Confirm(discord.ui.View):
     """A simple confirmation view with a confirm and cancel button.
-    
+
     Adds a confirm and cancel button.
     Pressing either button will defer the interaction.
 
     Parameters
     ----------
+    owner: discord.User
+        The owner of this interaction.
     confirm: str
         Optional label for the confirm button. Defaults to ``Confirm``.
     cancel: str
         Optional label for the cancel button. Defaults to ``Cancel``.
     """
-    def __init__(self, confirm:str=None, cancel:str=None):
-        super().__init__()
+
+    def __init__(self, owner: discord.User, confirm: str = None, cancel: str = None):
+        super().__init__(timeout=60)
         self.value = None
+        self.owner = owner
 
         if confirm:
             self.confirm.label = confirm
-        
+
         if cancel:
             self.cancel.label = cancel
 
+    async def interaction_check(self, interaction: discord.Interaction):
+        return interaction.user == self.owner
+
+    def stop(self):
+        super().stop()
+        for item in self.children:
+            if isinstance(item, discord.ui.Button):
+                item.disabled = True
+
+    async def process(self, interaction, value):
+        self.value = value
+        self.stop()
+        await interaction.response.edit_message(view=self)
+
     @discord.ui.button(label="Confirm", style=discord.ButtonStyle.green)
     async def confirm(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await interaction.response.defer()
-        self.value = True
-        self.stop()
+        await self.process(interaction, True)
 
     @discord.ui.button(label="Cancel", style=discord.ButtonStyle.grey)
     async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await interaction.response.defer()
-        self.value = False
+        await self.process(interaction, False)
+
+
+class Choice(discord.ui.View):
+    def __init__(self, owner: discord.User, options:dict=None, allow_cancel=True):
+        super().__init__(timeout=60)
+        self.owner = owner
+        self._options = options
+        self.value = None
+        self.cancelled = False
+
+        # Add options.
+        for label, value in options.items():
+            button = discord.ui.Button(label=label, style=discord.ButtonStyle.green)
+            button.callback = functools.partial(self.process, value=value)
+            self.add_item(button)
+
+        # Add cancel button.
+        if allow_cancel:
+            button = discord.ui.Button(label="Cancel", style=discord.ButtonStyle.grey)
+            button.callback = functools.partial(self.process, cancelled=True)
+            self.add_item(button)
+
+    async def interaction_check(self, interaction: discord.Interaction):
+        return interaction.user == self.owner
+
+    def stop(self):
+        super().stop()
+        for item in self.children:
+            if isinstance(item, discord.ui.Button):
+                item.disabled = True
+
+    async def process(self, interaction: discord.Interaction, value=None, cancelled=False):
+        # Process pressed buttons and set the return value.
+        self.value = value
+        self.cancelled = cancelled
         self.stop()
+        await interaction.response.edit_message(view=self)

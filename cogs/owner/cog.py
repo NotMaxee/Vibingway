@@ -67,7 +67,7 @@ class Owner(Cog):
 
     @owner.command(name="restart", description="Restart the bot.")
     async def owner_restart(self, interaction: discord.Interaction):
-        view = io.Confirm()
+        view = io.Confirm(interaction.user)
         embed = io.message("Are you sure you want to restart the bot?")
         await interaction.response.send_message(embed=embed, view=view)
         await view.wait()
@@ -85,7 +85,7 @@ class Owner(Cog):
     @owner.command(name="shutdown", description="Shut the bot down.")
     async def owner_shutdown(self, interaction: discord.Interaction):
         
-        view = io.Confirm()
+        view = io.Confirm(interaction.user)
         embed = io.message("Are you sure you want to shut down the bot?")
         await interaction.response.send_message(embed=embed, view=view)
         await view.wait()

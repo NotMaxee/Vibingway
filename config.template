@@ -1,0 +1,44 @@
+# Vibingway Configuration File
+
+# The application token of the bot.
+token = ""
+
+# A list of extensions to load from /cogs during startup.
+extensions = [
+    "cogs.debug",
+    "cogs.owner",
+    "cogs.help",
+    "cogs.music",
+    "cogs.banners"
+]
+
+# The credentials for the PostgreSQL database.
+database_credentials = dict(
+    user     = "vibingway",
+    password = "vibingway",
+    host     = "localhost",
+    port     = "5432",
+    database = "vibingway",
+)
+
+# ID for the wavelink node.
+wavelink_id = "vibingway"
+
+# The credentials for the lavalink server.
+lavalink_credentials = dict(
+    host="localhost",
+    port=2333,
+    password="vibingway",
+)
+
+# IDs of guilds that should have all commands synced to them.
+# Owner-only commands will only appear in these guilds.
+admin_guilds = [
+]
+
+# IDs of users that should have access to owner-only commands.
+admin_users = [
+]
+
+# An optional webhook through which unhandled errors should be logged.
+logging_webhook = ""

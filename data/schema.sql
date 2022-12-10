@@ -1,32 +1,26 @@
 /* CREATE statements for relevant database tables. */
 
-/* The queue_setings table holds extra information about music queues.
- * Used to restore queue settings after restarts or disconnects.
- */
-CREATE TABLE IF NOT EXISTS queue_settings (
-    "guild_id"  BIGINT NOT NULL,    
-    "position"  INT,                /* last queue position */
-    "order"     TEXT NOT NULL,      /* normal, reverse, random */
-    "loop"      TEXT NOT NULL,       /* off, all, track */
-    "volume"    INT NOT NULL        /* volume in percent (0 - 100) */
+CREATE TABLE IF NOT EXISTS player_settings (
+    "guild_id"  BIGINT NOT NULL,    /* id of the guild      */
+    "position"  INT,                /* playlist position    */
+    "order"     TEXT NOT NULL,      /* playlist order       */
+    "repeat"    TEXT NOT NULL,      /* playlist repeat mode */
+    "volume"    INT NOT NULL        /* volume in %          */
 );
 
-ALTER TABLE queue_settings
-    ADD CONSTRAINT pk_queue_settings
+ALTER TABLE player_settings
+    ADD CONSTRAINT pk_player_settings
     PRIMARY KEY (guild_id);
 
-/* The queue_entries table holds all tracks currently in the queue.
- * Used to restore the queue after restarts or disconnects.
-*/
-CREATE TABLE IF NOT EXISTS queue_entries (
-    "guild_id"   BIGINT NOT NULL,
-    "user_id"    BIGINT NOT NULL,
-    "position"   INT NOT NULL,      /* Position of the track in the queue. */
-    "type"       INT NOT NULL,     /* youtube, soundcloud */
+CREATE TABLE IF NOT EXISTS playlist_tracks (
+    "guild_id"   BIGINT NOT NULL,   /* id of the guild                    */
+    "user_id"    BIGINT NOT NULL,   /* requester id                       */
+    "position"   INT NOT NULL,      /* position of the track in the queue */
+    "type"       INT NOT NULL,      /* youtube, youtube_music, soundcloud */
     "identifier" TEXT NOT NULL      /* base64 identifier used by wavelink */
 );
 
-ALTER TABLE queue_entries 
-    ADD CONSTRAINT pk_queue_entries
+ALTER TABLE playlist_tracks 
+    ADD CONSTRAINT pk_playlist_tracks
     PRIMARY KEY (guild_id, position);
 

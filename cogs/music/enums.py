@@ -1,30 +1,17 @@
 import enum
 
 
-class LoopModes(enum.StrEnum):
-    """A list of all available looping modes."""
 
-    #: Disables looping.
+class Repeat(enum.StrEnum):
+    """An enumerator over the different repeat modes."""
+    #: Disables repeating the playlist.
     OFF = "off"
 
-    #: Loops the entire queue.
+    #: Loops the entire playlist.
     ALL = "all"
 
     #: Loops the current track.
     TRACK = "track"
-    
-class QueueOrder(enum.StrEnum):
-    """A list of all available queue orders."""
-
-    #: Plays tracks in order.
-    NORMAL = "normal"
-
-    #: Plays tracks in reverse order.
-    REVERSE = "reverse"
-
-    #: Plays tracks in a random order.
-    RANDOM = "random"
-
 
 class TrackType(enum.IntEnum):
     """A list of track types."""

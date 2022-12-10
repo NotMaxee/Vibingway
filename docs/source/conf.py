@@ -9,13 +9,6 @@
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-#
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
-
-
-# -- Project information -----------------------------------------------------
 
 import os
 import sys
@@ -23,12 +16,22 @@ import sys
 sys.path.insert(0, os.path.abspath("."))
 sys.path.insert(0, os.path.abspath(f"..{os.sep}.."))
 
+# -- Project information -----------------------------------------------------
+
 import core
 project = core.__title__
 copyright = core.__copyright__
 author = core.__author__
 version = core.__version__
 
+# -- RST Prolog --------------------------------------------------------------
+
+rst_prolog = """
+.. |coro| replace:: This function is a |corourl|_.
+.. |maybecoro| replace:: This function *could be a* |corourl|_.
+.. |corourl| replace:: *coroutine*
+.. _corourl: https://docs.python.org/3/library/asyncio-task.html#coroutine
+"""
 
 # -- General configuration ---------------------------------------------------
 

@@ -6,6 +6,7 @@ if __name__ == "__main__":
 
     # Set working directory and prepare logging.
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
+    utils.setup_uvloop()
     utils.setup_logging()
 
     # Launch the bot.

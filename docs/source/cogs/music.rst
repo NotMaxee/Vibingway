@@ -12,20 +12,23 @@ Cog
 Enums
 *****
 
-.. autoclass:: cogs.music.enums.LoopModes
-    :members: OFF, ALL, TRACK
+.. autoclass:: cogs.music.enums.Repeat
+    :members: OFF, TRACK, ALL
 
-.. autoclass:: cogs.music.enums.QueueOrder
-    :members: NORMAL, REVERSE, RANDOM
+PlaylistPlayer
+**************
 
-DBPlayer
-********
-
-.. autoclass:: cogs.music.player.DBPlayer
+.. autoclass:: cogs.music.player.PlaylistPlayer
     :members:
 
-DBQueue
-*******
+Playlist
+********
 
-.. autoclass:: cogs.music.queue.DBQueue
+.. autoclass:: cogs.music.playlist.Playlist
+    :members:
+
+UI
+****
+
+.. autoclass:: cogs.music.ui.PlaylistView
     :members:

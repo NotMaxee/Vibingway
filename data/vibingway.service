@@ -1,0 +1,16 @@
+[Unit]
+Description=VibingwayBot
+After=multi-user.target
+
+[Service]
+User=root
+WorkingDirectory=/home/vibingway/vibingway
+ExecStart=/bin/bash /home/vibingway/vibingway/launch.sh --no-prompt
+Type=idle
+Restart=always
+RestartSec=10
+RestartPreventExitStatus=0 1
+StandardOutput=console
+
+[Install]
+WantedBy=multi-user.target

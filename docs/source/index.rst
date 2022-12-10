@@ -5,9 +5,14 @@ Welcome to Vibingway's documentation!
 
 .. todo:: Add brief description.
 
+.. toctree::
+   :maxdepth: 1
+   :caption: Guides
+
+   guides/installation
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Core
 
    core/bot

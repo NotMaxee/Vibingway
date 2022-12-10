@@ -65,7 +65,7 @@ class Vibingway(commands.Bot):
 
         await self.change_presence(
             status=discord.Status.online,
-            activity=discord.Game("good vibes • /help")
+            activity=discord.Game("good vibes.")
         )
 
     async def setup_hook(self):

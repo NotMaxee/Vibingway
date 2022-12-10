@@ -1,0 +1,12 @@
+[Unit]
+Description=LavalinkServer
+
+[Service]
+User=root
+WorkingDirectory=/home/vibingway/vibingway/lavalink
+ExecStart=/bin/bash /home/vibingway/vibingway/lavalink/launch.sh --no-prompt
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
