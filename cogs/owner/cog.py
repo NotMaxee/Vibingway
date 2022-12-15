@@ -14,6 +14,7 @@ from core.utils import ExitCodes, io, string
 
 from .git import Git, GitError, NoCommits, NoRepository
 from .ui import CodeModal, SQLModal
+from .utils import create_table_representation
 
 async def autocomplete_module(
     interaction: discord.Interaction,
@@ -103,9 +104,42 @@ class Owner(Cog):
             await self.bot.close(exit_code=ExitCodes.SHUTDOWN)
 
     @owner.command(name="sql", description="Run an SQL query.")
-    async def owner_sql(self, interaction: discord.Interaction, sql:str):
-        # TODO: Run the SQL query and return the outcome.
-        await interaction.response.send_message("This command is not quite ready yet.")
+    async def owner_sql(self, interaction: discord.Interaction):
+        
+        # Prepare an SQL input modal.
+        modal = SQLModal()
+        await interaction.response.send_modal(modal)
+        
+        if await modal.wait():
+            raise Failure("You took too long to respond.")
+        elif not modal.sql:
+            raise Failure("You did not provide a query to run.")
+        
+        query = modal.sql
+
+        # Extract queries and run them.
+        try:
+            async with self.bot.db.acquire() as connection:
+                if query.count(";") > 1:
+                    results = await connection.execute(query)
+                else:
+                    results = await connection.fetch(query)
+        except Exception as err:
+            etype = type(err).__name__
+            embed = io.failure("An error occured.", fields=[dict(name="Error", value=f"**{etype}**: {err}")])
+            await interaction.followup.send(embed=embed)
+            return
+        
+        # Show query results.
+        if isinstance(results, str):
+            content = results
+        else:
+            content = create_table_representation(results)
+        
+        embed = io.success("The SQL query succeeded.")
+        file = string.create_text_file("results", content)
+
+        await interaction.followup.send(embed=embed, file=file)
 
     @owner.command(name="eval", description="Execute code snippets.")
     async def owner_eval(self, interaction: discord.Interaction):
