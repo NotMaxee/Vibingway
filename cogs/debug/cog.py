@@ -1,7 +1,6 @@
 import inspect
 import logging
 import traceback
-from io import BytesIO
 
 import discord
 import discord.app_commands as commands
@@ -109,8 +108,7 @@ class Debug(Cog):
         params = dict(embed=embed, username=self.bot.user.name, avatar_url=self.bot.user.avatar.url)
         if len(trace) > 1000:
             stamp = now.strftime("%d-%m-%Y_%H-%M-%S_%f")
-            buffer = BytesIO(trace.encode("utf-8"))
-            params["file"] = discord.File(buffer, f"error_{stamp}.txt")
+            params["file"] = string.create_text_file(f"error_{stamp}", trace)
 
         try:
             await self.webhook.send(**params)
@@ -152,8 +150,7 @@ class Debug(Cog):
         params = dict(embed=embed, username=self.bot.user.name, avatar_url=self.bot.user.avatar.url)
         if len(trace) > 1000:
             stamp = interaction.created_at.strftime("%d-%m-%Y_%H-%M-%S_%f")
-            buffer = BytesIO(trace.encode("utf-8"))
-            params["file"] = discord.File(buffer, f"error_{stamp}.txt")
+            params["file"] = string.create_text_file(f"error_{stamp}", trace)
 
         try:
             await self.webhook.send(**params)

@@ -1,9 +1,8 @@
-__all__ = (
-    "ELLIPSIS",
-    "truncate",
-    "human_join",
-    "format_seconds"
-)
+import discord
+from io import BytesIO
+
+
+__all__ = ("ELLIPSIS", "truncate", "human_join", "format_seconds", "create_text_file")
 
 ELLIPSIS = "…"
 """The ellipsis character used for :func:`utils.string.truncate`."""
@@ -45,9 +44,10 @@ def truncate(string, length):
     if length <= 0:
         return ""
     elif len(string) > length:
-        return string[:length-1] + "…"
+        return string[: length - 1] + "…"
     else:
         return string
+
 
 def human_join(items, bold=False, code=False, concatenator="and"):
     r"""Join a list of objects and return human readable representation.
@@ -84,7 +84,7 @@ def human_join(items, bold=False, code=False, concatenator="and"):
     concatenator: Optional[str]
         The concatenator to use for the second last and
         last item.
-    
+
     Returns
     -------
     str
@@ -102,21 +102,18 @@ def human_join(items, bold=False, code=False, concatenator="and"):
         return ""
     elif len(items) == 1:
         return str(items[0])
-    
-    return "{} {} {}".format(
-        ", ".join(items[:-1]),
-        concatenator,
-        items[-1]
-    )
+
+    return "{} {} {}".format(", ".join(items[:-1]), concatenator, items[-1])
+
 
 def format_seconds(seconds: (int | float)):
     """Returns a human readable string representation of the given amount of seconds.
-    
+
     Parameters
     ----------
     seconds: Union[int, float]
         An amount of seconds.
-    
+
     Returns
     -------
     str
@@ -131,3 +128,23 @@ def format_seconds(seconds: (int | float)):
     else:
         return f"{minutes:0>2d}:{seconds:0>2d}"
 
+
+def create_text_file(name: str, content: str):
+    """Create a :class:`discord.File` with the given name and content.
+
+    The file extension is set to `txt`.
+
+    Parameters
+    ----------
+    name: str
+        The filename without the file extension.
+    content: str
+        The content of the file.
+
+    Returns
+    -------
+    discord.File
+        The file object.
+    """
+    buffer = BytesIO(content.encode("utf-8"))
+    return discord.File(buffer, f"{name}.txt")

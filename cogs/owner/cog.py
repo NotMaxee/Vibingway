@@ -2,7 +2,7 @@ import asyncio
 import logging
 import textwrap
 from contextlib import redirect_stdout
-from io import StringIO
+from io import StringIO, BytesIO
 from typing import Union
 
 import discord
@@ -10,10 +10,10 @@ import discord.app_commands as commands
 from discord.ext.commands import Bot, Cog
 
 from core.errors import Failure, Warning
-from core.utils import ExitCodes, io
+from core.utils import ExitCodes, io, string
 
 from .git import Git, GitError, NoCommits, NoRepository
-
+from .ui import CodeModal, SQLModal
 
 async def autocomplete_module(
     interaction: discord.Interaction,
@@ -25,7 +25,6 @@ async def autocomplete_module(
         commands.Choice(name=module, value=module)
         for module in modules if current.lower() in module.lower()
     ]
-
 
 class Owner(Cog):
     """Cog for owner commands."""
@@ -109,7 +108,18 @@ class Owner(Cog):
         await interaction.response.send_message("This command is not quite ready yet.")
 
     @owner.command(name="eval", description="Execute code snippets.")
-    async def owner_eval(self, interaction: discord.Interaction, code: str):
+    async def owner_eval(self, interaction: discord.Interaction):
+
+        # Prepare a code input modal.
+        modal = CodeModal()
+        await interaction.response.send_modal(modal)
+        
+        if await modal.wait():
+            raise Failure("You took too long to respond.")
+        elif not modal.code:
+            raise Failure("You did not provide any code to run.")
+        
+        code = modal.code
 
         # Prepare execution environment.
         env = {
@@ -132,7 +142,7 @@ class Owner(Cog):
             self.log.error("Unable to compile eval code!", exc_info=exc)
             embed = io.failure("I could not compile the code!")
             # TODO: Add / attach traceback.
-            return await interaction.response.send_message(embed=embed)
+            return await interaction.followup.send(embed=embed)
 
         # Run function.
         stdout = StringIO()
@@ -146,21 +156,33 @@ class Owner(Cog):
             self.log.error("Unable to execute eval code!", exc_info=exc)
             embed = io.failure("I could not execute the code!")
             # TODO: Add / attach traceback.
-            return await interaction.response.send_message(embed=embed)
+            return await interaction.followup.send(embed=embed)
 
         # Generate results.
         output = stdout.getvalue()
         fields = list()
 
+        files = []
+
         if output:
-            fields.append(dict(name="Output", value=f"```\n{output}```"))
+            if len(output) > 1000:
+                files.append(string.create_text_file("output", output))
+                truncated = string.truncate(output, 1000)
+                fields.append(dict(name="Output", value=f"```\n{truncated}```"))
+            else:
+                fields.append(dict(name="Output", value=f"```\n{output}```"))
 
         if returned:
-            fields.append(dict(name="Return Value", value=f"```\n{returned}```"))
+            if len(returned) > 1000:
+                files.append(string.create_text_file("returned", returned))
+                truncated = string.truncate(returned, 1000)
+                fields.append(dict(name="Return Value", value=f"```\n{truncated}```"))
+            else:
+                fields.append(dict(name="Return Value", value=f"```\n{returned}```"))
         
         embed = io.success("Eval executed successfully.", fields=fields)
 
-        return await interaction.response.send_message(embed=embed)
+        return await interaction.followup.send(embed=embed, files=files)
 
     @owner.command(name="update", description="Check for available updates.")
     async def owner_update(self, interaction: discord.Interaction):
