@@ -25,7 +25,7 @@ class PlaylistView(discord.ui.View):
         if remainder > 0:
             pages += 1
         
-        return pages
+        return max(1, pages)
 
     def get_page(self, page: int) -> discord.Embed:
         """Get the embed for page ``page``.

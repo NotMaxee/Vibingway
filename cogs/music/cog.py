@@ -377,6 +377,7 @@ class Music(Cog):
         
         # Add tracks to playlist.
         play_next = (player.playlist.length != 0)
+        position = player.playlist.length + 1
         await player.playlist.add_tracks(tracks)
         
         if not player.is_playing():
@@ -387,9 +388,9 @@ class Music(Cog):
 
         # Send confirmation.
         if len(tracks) == 1:
-            embed = io.success(f"{interaction.user.mention} added [`{tracks[0].title}`]({tracks[0].uri}) to the playlist.")
+            embed = io.success(f"{interaction.user.mention} added [`{tracks[0].title}`]({tracks[0].uri}) to the playlist at position #{position}.")
         else:
-            embed = io.success(f"{interaction.user.mention} added {len(tracks)} tracks to the playlist.")
+            embed = io.success(f"{interaction.user.mention} added {len(tracks)} tracks to the playlist #{position}.")
 
         if interaction.response.is_done():
             await interaction.followup.send(embed=embed)
@@ -481,6 +482,27 @@ class Music(Cog):
         await interaction.response.send_message(embed=embed, view=view)
         await view.wait()
 
+    @music.command(name="remove", description="Remove a track from the playlist.")
+    async def music_remove(self, interaction: discord.Interaction, position: commands.Range[int, 1, None]):
+        self.check_wavelink_ready()
+
+        # Find player.
+        player: PlaylistPlayer = self.get_player(interaction.guild)
+        if not player:
+            raise Failure("I can't remove a track from the playlist without first joining a voice channel.")
+
+        if player.playlist.is_empty():
+            raise Failure("The playlist is empty.")
+
+        # Get the track.
+        if position > player.playlist.length:
+            raise Failure(f"You must specify a position within the playlist range (max: {player.playlist.length}).")
+        
+        track = await player.playlist.remove_track(position-1)
+        
+        embed = io.success(f"Removed `{track.title}` from the playlist.")
+        await interaction.response.send_message(embed=embed)
+
     @music.command(name="clear", description="Clear the playlist.")
     async def music_clear(self, interaction: discord.Interaction):
         self.check_wavelink_ready()
@@ -526,7 +548,7 @@ class Music(Cog):
         url = track.uri
 
         try:
-            position = player.playlist.tracks.index(track)
+            position = player.playlist.tracks.index(track) + 1
             position = f"#{position:03d}"
         except:
             position = "#???"
