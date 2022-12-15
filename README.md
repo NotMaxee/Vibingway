@@ -5,7 +5,3 @@
 ## Features
 
 > TBD
-
-## Installation
-
-> TBD
