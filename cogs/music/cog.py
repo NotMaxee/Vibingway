@@ -576,3 +576,19 @@ class Music(Cog):
         
         await interaction.response.send_message(embed=embed)
 
+    @music.command(name="volume", description="Change the playlist volume.")
+    @commands.describe(volume="Volume in percent from 0% to 150%.")
+    async def music_volume(self, interaction: discord.Interaction, volume: commands.Range[int, 0, 150]):
+        self.check_wavelink_ready()
+
+        # Find player.
+        player: PlaylistPlayer = self.get_player(interaction.guild)
+        if not player:
+            raise Failure("I can't change the volume without first joining a voice channel.")
+
+        # Change volume.
+        await player.set_volume(volume)
+
+        embed = io.success(f"Volume set to `{volume}%`.")
+        await interaction.response.send_message(embed=embed)
+        

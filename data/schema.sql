@@ -23,4 +23,3 @@ CREATE TABLE IF NOT EXISTS playlist_tracks (
 ALTER TABLE playlist_tracks 
     ADD CONSTRAINT pk_playlist_tracks
     PRIMARY KEY (guild_id, position);
-

@@ -2,7 +2,7 @@ import asyncio
 import logging
 import textwrap
 from contextlib import redirect_stdout
-from io import StringIO, BytesIO
+from io import BytesIO, StringIO
 from typing import Union
 
 import discord
@@ -15,6 +15,7 @@ from core.utils import ExitCodes, io, string
 from .git import Git, GitError, NoCommits, NoRepository
 from .ui import CodeModal, SQLModal
 from .utils import create_table_representation
+
 
 async def autocomplete_module(
     interaction: discord.Interaction,
