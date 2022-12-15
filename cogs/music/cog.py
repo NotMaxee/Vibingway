@@ -500,7 +500,7 @@ class Music(Cog):
         
         track = await player.playlist.remove_track(position-1)
         
-        embed = io.success(f"Removed `{track.title}` from the playlist.")
+        embed = io.success(f"Removed `[{track.title}]({track.uri})` from the playlist.")
         await interaction.response.send_message(embed=embed)
 
     @music.command(name="clear", description="Clear the playlist.")
