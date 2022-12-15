@@ -134,8 +134,15 @@ class Music(Cog):
                         pass
                     await player.disconnect()
         
-        # TODO: Check if we need to clean up anything if we are forcibly
-        # removed from a voice channel.
+        # Clean up after getting forcibly removed from a voice channel.
+        if member.bot and member == self.bot.user:
+            player = self.get_player(member.guild)
+
+            if player is not None:
+                try:
+                    await player.disconnect()
+                except:
+                    player.cleanup()
 
     # Helper methods.
 
@@ -598,9 +605,9 @@ class Music(Cog):
         
         await interaction.response.send_message(embed=embed)
 
-    @music.command(name="volume", description="Change the playlist volume.")
+    @music.command(name="volume", description="Check or change the playlist volume.")
     @commands.describe(volume="Volume in percent from 0% to 150%.")
-    async def music_volume(self, interaction: discord.Interaction, volume: commands.Range[int, 0, 150]):
+    async def music_volume(self, interaction: discord.Interaction, volume: Optional[commands.Range[int, 0, 150]]):
         self.check_wavelink_ready()
 
         # Find player.
@@ -608,9 +615,17 @@ class Music(Cog):
         if not player:
             raise Failure("I can't change the volume without first joining a voice channel.")
 
-        # Change volume.
-        await player.set_volume(volume)
+        # If the volume is provided, set it.
+        if volume is not None:
+            await player.set_volume(volume)
 
-        embed = io.success(f"Volume set to `{volume}%`.")
-        await interaction.response.send_message(embed=embed)
+            embed = io.success(f"Volume set to `{volume}%`.")
+            await interaction.response.send_message(embed=embed)
+            return
         
+        # Otherwise show the current volume.
+        volume = player.volume
+
+        embed = io.success(f"The volume is set to `{volume}%`.")
+        await interaction.response.send_message(embed=embed)
+            
