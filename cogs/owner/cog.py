@@ -9,7 +9,10 @@ import discord
 import discord.app_commands as commands
 from discord.ext.commands import Bot, Cog
 
+from core.errors import Failure, Warning
 from core.utils import ExitCodes, io
+
+from .git import Git, GitError, NoCommits, NoRepository
 
 
 async def autocomplete_module(
@@ -33,7 +36,7 @@ class Owner(Cog):
         # Internal setup.
         self.log = logging.getLogger(__name__)
         self.bot = bot
-
+        self.git = Git()
         # Enforce interaction checks.
         self.owner.interaction_check = self.check
         self.module.interaction_check = self.check
@@ -158,6 +161,51 @@ class Owner(Cog):
         embed = io.success("Eval executed successfully.", fields=fields)
 
         return await interaction.response.send_message(embed=embed)
+
+    @owner.command(name="update", description="Check for available updates.")
+    async def owner_update(self, interaction: discord.Interaction):
+        
+        # Check whether we're in a git repository:
+        if not await self.git.in_repo():
+            raise Failure("I am not running in a git repository.")
+
+        # Check for update.
+        await interaction.response.defer(thinking=True)
+        behind = await self.git.is_behind()
+        
+        # No updates available.
+        if not behind:
+            raise Failure("There are no updates available.")
+        
+        embed = io.success("An update is available. Would you like to download it?")
+        view = io.Confirm(interaction.user)
+        await interaction.followup.send(embed=embed, view=view)
+        
+        if await view.wait():
+            raise Failure("You took too long to respond.")
+
+        if not view.value:
+            raise Failure("Update cancelled.")
+
+        embed = io.success("Downloading update. This may take a while...")
+        await interaction.followup.send(embed=embed)
+
+        # Download the update
+        await self.git.pull()
+        
+        embed = io.success("Update donwloaded. Would you like me to restart now to apply it?")
+        view = io.Confirm(interaction.user)
+        await interaction.followup.send(embed=embed, view=view)
+        
+        if await view.wait():
+            raise Failure("You took too long to respond.")
+
+        if not view.value:
+            raise Failure("Restart cancelled.")
+
+        embed = io.success("Restarting. See you in a moment!")
+        await interaction.followup.send(embed=embed)
+        await self.bot.close(code=ExitCodes.RESTART)
 
     # Module commands.
 
