@@ -205,7 +205,7 @@ class Owner(Cog):
 
         embed = io.success("Restarting. See you in a moment!")
         await interaction.followup.send(embed=embed)
-        await self.bot.close(code=ExitCodes.RESTART)
+        await self.bot.close(exit_code=ExitCodes.RESTART)
 
     # Module commands.
 
