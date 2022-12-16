@@ -111,7 +111,7 @@ class Music(Cog):
 
     @Cog.listener()
     async def on_wavelink_track_exception(self, player: PlaylistPlayer, track: wavelink.Track, error):
-        self.log.info(f"PlaylistPlayer {player!r} encounted an error playing {track.title!r}: {error}")
+        self.log.info(f"PlaylistPlayer {player!r} encountered an error playing {track.title!r}: {error}")
         await player.play_next()
 
     @Cog.listener()
