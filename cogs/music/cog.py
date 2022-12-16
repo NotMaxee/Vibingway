@@ -192,9 +192,9 @@ class Music(Cog):
         
         Raises
         ------
-        discord.app_commands.BotMissingPermissions
-            Exception raised when the bot does not have the connect and speak
-            permission. This is handled by the debug module.
+        Failure
+            Exception raised when the bot does not have the connect and / or
+            speak permission for the provide voice channel.
         """
         perms: discord.Permissions = channel.permissions_for(channel.guild.me)
 
@@ -206,12 +206,18 @@ class Music(Cog):
             missing.append("speak")
         
         if missing:
-            raise commands.BotMissingPermissions(missing)
+            formatted = string.human_join(missing, code=True)
+            message = f"I am missing the following permissions to access {channel.mention}: {formatted}."
+            raise Failure(message)
 
     # Player and queue methods.
 
     async def create_player(self, text: discord.TextChannel, voice: discord.VoiceChannel) -> PlaylistPlayer:
         """Create a new player.
+
+        Will raise a :class:`discord.app_commands.BotMissingPermissions` if the bot can not
+        connect to the voice channel or is missing any
+        of the required permissions.
         
         Parameters
         ----------
@@ -219,7 +225,14 @@ class Music(Cog):
             The text channel to output status information to.
         voice: discord.VoiceChannel
             The voice channel to connect the player to.
+
+        Raises
+        ------
+        discord.app_commands.BotMissingPermissions
+            Exception raised when the bot is missing any of the required
+            permissions to connect to the voice channel and play audio.
         """
+        self.check_can_connect(voice)
         player = await PlaylistPlayer.create(self.bot, text, voice, self.node)
         await voice.connect(cls=player)
         return player
@@ -350,6 +363,7 @@ class Music(Cog):
 
         # Move existing player.
         channel = channel or interaction.user.voice.channel
+        self.check_can_connect(channel)
         player: PlaylistPlayer = channel.guild.voice_client
         if player:
             if player.channel == channel:
