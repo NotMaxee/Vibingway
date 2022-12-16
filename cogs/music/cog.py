@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import re
 from typing import Optional, TypedDict
 
 import discord
@@ -16,7 +15,6 @@ from .player import PlaylistPlayer
 from .playlist import Playlist
 from .ui import PlaylistView
 
-SEEK_REGEX = re.compile(r"((?P<hours>[0-9]*):)?((?P<minutes>[0-5][0-9]):)?(?P<seconds>[0-5]?[0-9])$")
 
 class Music(Cog):
     """Cog for music commands."""
