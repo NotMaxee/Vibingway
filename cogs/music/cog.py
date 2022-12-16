@@ -58,9 +58,20 @@ class Music(Cog):
                 **self.bot.config.lavalink_credentials
             )
 
-        # TODO: Find and terminate stale voice connections without players.
-        # Players: self.node.players / self.bot.voice_clients
+        # Find stale voice connections without a player and terminate them.
+        for guild in self.bot.guilds:
+            for voice in guild.voice_channels:
+                if self.bot.user in voice.members:
+                    player = self.get_player(guild)
 
+                    if not player:
+                        self.log.info(f"Cleaning up stale connection in {guild!r} {voice!r}")
+                        try:
+                            client = await voice.connect()
+                            await client.disconnect()
+                        except:
+                            pass
+                    
     def setup_complete(self, task: asyncio.Task):
         # Handle errors that might occur while connecting to wavelink.
         if not task.exception():
@@ -136,11 +147,12 @@ class Music(Cog):
             return
 
         # Clean up the player after being forcibly removed from a voice channel.
+        # This scenario also includes normal disconnects, but in that case the
+        # player is already cleaned up, so we don't do any extra work.
         elif after.channel is None:
             
             # Get the player and disconnect it.
             player: PlaylistPlayer = self.get_player(member.guild)
-            self.log.info("Cleaning up player after forced disconnect.")
             await self.cleanup_player(player)
         
         # Handle being moved to a different voice channel.
