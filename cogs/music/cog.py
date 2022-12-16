@@ -122,27 +122,47 @@ class Music(Cog):
     @Cog.listener()
     async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
         
-        # Leave the voice channel when the last user leaves.
+        # Leave the voice channel after the last user leaves.
         if not member.bot and after.channel is None:
             if not [m for m in before.channel.members if not m.bot]:
+
+                # Check if there is a player for this guild / channel.
                 player: PlaylistPlayer = self.get_player(member.guild)
                 if player and player.channel == before.channel:
-                    embed = io.message(f"Disconnected from {player.channel.mention}.")
-                    try:
-                        await player.text.send(embed=embed)
-                    except:
-                        pass
-                    await player.disconnect()
-        
-        # Clean up after getting forcibly removed from a voice channel.
-        if member == self.bot.user and after.channel is None:
-            player = self.get_player(member.guild)
+                    await self.cleanup_player(player)
 
-            if player is not None:
+        # After this point we don't care if it's not the bot user.
+        if member != self.bot.user:
+            return
+
+        # Clean up the player after being forcibly removed from a voice channel.
+        elif after.channel is None:
+            
+            # Get the player and disconnect it.
+            player: PlaylistPlayer = self.get_player(member.guild)
+            self.log.info("Cleaning up player after forced disconnect.")
+            await self.cleanup_player(player)
+        
+        # Handle being moved to a different voice channel.
+        elif before.channel and after.channel and before.channel != after.channel:
+
+            # Get the player and move or kill it.
+            player: PlaylistPlayer = self.get_player(member.guild)
+
+            # If the channel is empty kill the player.
+            if player and not [m for m in after.channel.members if not m.bot]:
+                self.log.info("Cleaning up player after forced move.")
+                await self.cleanup_player(player)
+            
+            # Otherwise move it.
+            elif player:
+                self.log.info("Moving player after forced move.")
+                await player.move_to(after.channel)
+                embed = io.message(f"Moved to {after.channel.mention}.")
                 try:
-                    await player.disconnect()
+                    await player.text.send(embed=embed)
                 except:
-                    player.cleanup()
+                    pass
 
     # Helper methods.
 
@@ -213,6 +233,32 @@ class Music(Cog):
             The player or :obj:`None` if no player exists for this guild.
         """
         return self.node.get_player(guild) or guild.voice_client
+
+    async def cleanup_player(self, player: Optional[PlaylistPlayer]):
+        """Attempt to disconnect and clean up a player.
+        
+        Disconnetcs and cleans up the player and attempts
+        to send a message in its text channel.
+
+        Parameters
+        ----------
+        player: Optional[PlaylistPlayer]
+            The playlist player to clean up. You can pass in :obj:`None` to
+            immediately return instead.
+        """
+        if player is None:
+            return
+        
+        embed = io.message(f"Disconnected from {player.channel.mention}.")
+        try:
+            await player.text.send(embed=embed)
+        except:
+            pass
+
+        try:
+            await player.disconnect()
+        except:
+            player.cleanup()
 
     async def resolve_tracks(self, interaction: discord.Interaction, source:str) -> list[wavelink.Track]:
         """Attempt to find one or more tracks for a given source string.
@@ -296,9 +342,11 @@ class Music(Cog):
 
         # Check if a channel has been provided.
         if not channel and not interaction.user.voice:
-            embed = io.failure("No voice channel provided. Please either join a voice channel or specify a channel for me to join.")
-            await interaction.response.send_message(embed=embed)
-            return
+            raise Failure("No voice channel provided. Please either join a voice channel or specify a channel for me to join.")
+
+        # Check if the provided channel is empty.
+        elif channel and not [m for m in channel.members if not m.bot]:
+            raise Failure("There are no listeners in that voice channel.")
 
         # Move existing player.
         channel = channel or interaction.user.voice.channel
