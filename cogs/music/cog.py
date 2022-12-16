@@ -135,7 +135,7 @@ class Music(Cog):
                     await player.disconnect()
         
         # Clean up after getting forcibly removed from a voice channel.
-        if member.bot and member == self.bot.user:
+        if member == self.bot.user and after.channel is None:
             player = self.get_player(member.guild)
 
             if player is not None:
@@ -628,4 +628,3 @@ class Music(Cog):
 
         embed = io.success(f"The volume is set to `{volume}%`.")
         await interaction.response.send_message(embed=embed)
-            
