@@ -1,11 +1,11 @@
 import asyncio
 import logging
+import re
 from typing import Optional, TypedDict
 
 import discord
 import discord.app_commands as commands
 import wavelink
-
 from discord.ext.commands import Bot, Cog
 
 from core.errors import Failure, Warning
@@ -15,6 +15,8 @@ from .enums import Repeat
 from .player import PlaylistPlayer
 from .playlist import Playlist
 from .ui import PlaylistView
+
+SEEK_REGEX = re.compile(r"((?P<hours>[0-9]*):)?((?P<minutes>[0-5][0-9]):)?(?P<seconds>[0-5]?[0-9])$")
 
 class Music(Cog):
     """Cog for music commands."""
@@ -93,7 +95,7 @@ class Music(Cog):
         # player._source = track
 
         try:
-            embed = io.message(f"Now playing [{track.title}]({track.uri}).")
+            embed = io.message(f"Now playing [`{track.title}`]({track.uri}).")
             await player.text.send(embed=embed)
         except Exception as err:
             self.log.error("Unable to send notification.", exc_info=err)
@@ -324,7 +326,7 @@ class Music(Cog):
             
             lines = []
             for label, track in options.items():
-                lines.append(f"[{label}]({track.uri})")
+                lines.append(f"[`{label}`]({track.uri})")
 
             fields = [dict(name="Search Results", value="\n".join(lines))]
             embed = io.message(f"Please choose one of the search results to add to the playlist.", fields=fields)
@@ -517,6 +519,39 @@ class Music(Cog):
         embed = io.success(f"Stopped playback of `{track.title}`.")
         await interaction.response.send_message(embed=embed)
 
+    @music.command(name="seek", description="Seek to a position in the current track.")
+    async def music_seek(
+            self, 
+            interaction: discord.Interaction, 
+            hours: Optional[commands.Range[int, 0, 999]], 
+            minutes: Optional[commands.Range[int, 0, 59]], 
+            seconds: Optional[commands.Range[int, 0, 59]]
+        ):
+        self.check_wavelink_ready()
+        self.check_can_use_voice_command(interaction, same_channel=True)
+
+        # Find player.
+        player: PlaylistPlayer = self.get_player(interaction.guild)
+        if not player or not player.is_playing():
+            raise Failure("I am not playing anything.")
+        
+        # Check if any time was provided.
+        if hours is None and minutes is None and seconds is None:
+            raise Failure("Please provide a time to seek to.")
+            
+        hours = hours if hours is not None else 0
+        minutes = minutes if minutes is not None else 0
+        seconds = seconds if seconds is not None else 0
+
+        seconds = seconds + minutes * 60 + hours * 3600
+        await player.seek(seconds * 1000)
+
+        # Send message.
+        track = player.track
+        position = string.format_seconds(seconds)
+        embed = io.success(f"Skipped [`{track.title}`]({track.uri}) to position `{position}`.")
+        await interaction.response.send_message(embed=embed)
+
     @music.command(name="skip", description="Skip the current track.")
     async def music_skip(self, interaction: discord.Interaction):
         self.check_wavelink_ready()
@@ -534,7 +569,7 @@ class Music(Cog):
         else:
             await player.stop()
 
-        embed = io.success(f"Skipped playback of `{track.title}`.")
+        embed = io.success(f"Skipped playback of [`{track.title}`]({track.uri}).")
         await interaction.response.send_message(embed=embed)
         
     @music.command(name="playlist", description="View the playlist.")
@@ -569,7 +604,7 @@ class Music(Cog):
         
         track = await player.playlist.remove_track(position-1)
         
-        embed = io.success(f"Removed `[{track.title}]({track.uri})` from the playlist.")
+        embed = io.success(f"Removed [`{track.title}`]({track.uri}) from the playlist.")
         await interaction.response.send_message(embed=embed)
 
     @music.command(name="clear", description="Clear the playlist.")
@@ -625,7 +660,7 @@ class Music(Cog):
         elapsed = string.format_seconds(player.position)
         duration = string.format_seconds(track.duration)
 
-        description = f"{position} [{title}]({url}) ({elapsed} / {duration})"
+        description = f"{position} [`{title}`]({url}) ({elapsed} / {duration})"
         embed: discord.Embed = io.message(description)
         if isinstance(track, wavelink.YouTubeTrack):
             embed.set_thumbnail(url=track.thumbnail)
