@@ -56,11 +56,10 @@ class PlaylistView(discord.ui.View):
 
         lines = "\n".join(lines)
 
-
         # Build the embed
         text = f"Playlist Tracks `{start+1:03d}` - `{end:03d}`\n\n{lines}"
         footer = f"Page {page+1} / {self.max_pages}"
-        return io.message(text, footer=dict(text=footer))
+        return io.message(text, title="Playlist Browser", footer=dict(text=footer))
 
     def stop(self):
         super().stop()

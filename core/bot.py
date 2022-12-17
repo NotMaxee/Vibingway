@@ -30,12 +30,12 @@ class Vibingway(commands.Bot):
         self._exit_code: int = 0
 
     @property
-    def db(self):
+    def db(self) -> asyncpg.Pool:
         """asyncpg.Pool: The bot's database connection."""
         return self._db
 
     @property
-    def session(self):
+    def session(self) -> aiohttp.ClientSession:
         """aiohttp.ClientSession: The bot's client session."""
         return self._session
 
