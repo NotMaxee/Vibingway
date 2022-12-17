@@ -98,8 +98,8 @@ class Banners(Cog):
 
     # Banner commands.
 
-    @banner.command(name="add", description="Add a new banner. Recommended minimum size is 960x540, recommended aspect ratio is 16.9 and maximum file size is 10MB.")
-    @commands.describe(url="URL of the banner image.")
+    @banner.command(name="add", description="Add a new banner. Maximum file size is 10MB.")
+    @commands.describe(url="URL of the banner image. Must be a PNG, JPG or GIF.")
     async def banner_add(self, interaction: discord.Interaction, url: str):
         await interaction.response.defer(thinking=True)
         await self.api.download_image(url)
