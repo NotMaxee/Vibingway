@@ -242,6 +242,7 @@ class BannerAPI:
 
     async def rotate_banners(self):
         """Perform the automatic banner rotation."""
+        self.log.debug("Rotating banners.")
         # Only take guilds into account in which we have the "manage guild"
         # permission and who support setting the server banner.
         ids = [
@@ -249,6 +250,8 @@ class BannerAPI:
             if guild.me.guild_permissions.manage_guild
             and "BANNER" in guild.features
         ]
+
+        self.log.debug(f"Valid guild IDs: {ids}")
 
         # Fetch settings for guilds whose interval expired.
         query = """
