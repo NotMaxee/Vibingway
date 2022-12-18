@@ -71,6 +71,7 @@ class BannerAPI:
     # Helpers
 
     def cleanup(self):
+        self.log.info(f"Cleaning up {len(self.tasks)} task(s).")
         for task in self.tasks:
             task.cancel()
 

@@ -44,9 +44,14 @@ class Banners(Cog):
         await self.bot.wait_until_ready()
         
         # Task is cancelled when we shut things down, so this can run forever.
+        interval: int = 300 # Check for banner changes every 5 minutes.
+        self.log.info(f"Starting banner rotation task. Interval is {interval}s.")
+        
         while not self.bot.is_closed():
             await self.api.rotate_banners()
-            await asyncio.sleep(300) # Check for banner changes every 5 minutes.
+            await asyncio.sleep(interval) 
+
+        self.log.info("Banner rotation task stopped as the bot is closed.")
 
     def _banner_rotation_callback(self, task: asyncio.Task):
         # Handle errors that might occur while running the banner task.
@@ -67,7 +72,8 @@ class Banners(Cog):
 
     async def cog_unload(self):
         # Clean up the banner rotation task when unloading the cog.
-        self._task.cancel()
+        self.log.info("Cleaning up banner rotation task and API module.")
+        self._task.cancel() 
         self.api.cleanup()
 
     # Helpers
