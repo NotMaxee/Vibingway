@@ -291,6 +291,10 @@ class BannerAPI:
             self.log.error(f"Unable to update banner for guild {guild.name!r}: {error}", exc_info=error)
 
     def _show_random_banner_callback(self, task: asyncio.Task):
+        error = task.exception()
+        if error:
+            self.log.error("An error occured in a show banner task!", exc_info=error)
+
         try:
             self.tasks.remove(task)
         except ValueError:
