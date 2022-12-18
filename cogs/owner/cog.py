@@ -132,14 +132,15 @@ class Owner(Cog):
             return
         
         # Show query results.
-        if isinstance(results, str):
-            content = results
-        else:
-            content = create_table_representation(results)
-        
+        file = None
+        if results:
+            if isinstance(results, str):
+                content = results
+            else:
+                content = create_table_representation(results)
+            file = string.create_text_file("results", content)
+            
         embed = io.success("The SQL query succeeded.")
-        file = string.create_text_file("results", content)
-
         await interaction.followup.send(embed=embed, file=file)
 
     @owner.command(name="eval", description="Execute code snippets.")
