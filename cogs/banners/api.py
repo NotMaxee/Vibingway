@@ -264,6 +264,7 @@ class BannerAPI:
             if not guild:
                 continue
             
+            self.log.info(f"Creating banner update task for guild {guild.name!r}.")
             task = asyncio.create_task(self._show_random_banner(guild))
             task.add_done_callback(self._show_random_banner_callback)
 
