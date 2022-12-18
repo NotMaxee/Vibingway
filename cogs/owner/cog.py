@@ -251,7 +251,7 @@ class Owner(Cog):
         # Download the update
         await self.git.pull()
         
-        embed = io.success("Update donwloaded. Would you like me to restart now to apply it?")
+        embed = io.success("Update downloaded. Would you like me to restart now to apply it?")
         view = io.Confirm(interaction.user)
         await interaction.followup.send(embed=embed, view=view)
         
