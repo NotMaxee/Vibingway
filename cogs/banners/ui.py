@@ -98,6 +98,11 @@ class BannerView(discord.ui.View):
 
     # Buttons
 
+    @discord.ui.button(emoji="⏮️", style=discord.ButtonStyle.blurple)
+    async def button_skip_backward(self, interaction: discord.Interaction, button: discord.ui.Button):
+        self._page -= 5
+        await self.update(interaction)
+
     @discord.ui.button(emoji="⬅️", style=discord.ButtonStyle.blurple)
     async def button_previous(self, interaction: discord.Interaction, button: discord.ui.Button):
         self._page -= 1
@@ -107,6 +112,16 @@ class BannerView(discord.ui.View):
     async def button_next(self, interaction: discord.Interaction, button: discord.ui.Button):
         self._page += 1
         await self.update(interaction)
+
+    @discord.ui.button(emoji="⏭️", style=discord.ButtonStyle.blurple)
+    async def button_skip_forward(self, interaction: discord.Interaction, button: discord.ui.Button):
+        self._page += 5
+        await self.update(interaction)
+
+    @discord.ui.button(emoji="⏹️")
+    async def stop_view(self, interaction: discord.Interaction, button: discord.ui.Button):
+        self.stop()
+        await interaction.response.edit_message(view=self)
 
     @discord.ui.button(emoji="🖼️", style=discord.ButtonStyle.green)
     async def button_show(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -142,8 +157,3 @@ class BannerView(discord.ui.View):
             embed = io.success(f"I have deleted the banner.", thumbnail=url)
         
         await interaction.followup.send(embed=embed)
-
-    @discord.ui.button(emoji="⏹️")
-    async def stop_view(self, interaction: discord.Interaction, button: discord.ui.Button):
-        self.stop()
-        await interaction.response.edit_message(view=self)

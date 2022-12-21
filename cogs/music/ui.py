@@ -72,6 +72,11 @@ class PlaylistView(discord.ui.View):
 
     async def update(self, interaction: discord.Interaction):
         await interaction.response.edit_message(embed=self.get_page(self.page), view=self)
+        
+    @discord.ui.button(emoji="⏮️", style=discord.ButtonStyle.blurple)
+    async def button_skip_backwards(self, interaction: discord.Interaction, button: discord.ui.Button):
+        self._page -= 5
+        await self.update(interaction)
 
     @discord.ui.button(emoji="⬅️")
     async def show_previous(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -81,6 +86,11 @@ class PlaylistView(discord.ui.View):
     @discord.ui.button(emoji="➡️")
     async def show_next(self, interaction: discord.Interaction, button: discord.ui.Button):
         self._page = min(self._page + 1, self.max_pages - 1)
+        await self.update(interaction)
+
+    @discord.ui.button(emoji="⏭️", style=discord.ButtonStyle.blurple)
+    async def button_skip_forward(self, interaction: discord.Interaction, button: discord.ui.Button):
+        self._page += 5
         await self.update(interaction)
 
     @discord.ui.button(emoji="⏹️")
