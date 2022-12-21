@@ -100,7 +100,7 @@ class BannerView(discord.ui.View):
 
     @discord.ui.button(emoji="⬅️", style=discord.ButtonStyle.blurple)
     async def button_previous(self, interaction: discord.Interaction, button: discord.ui.Button):
-        self._page += 1
+        self._page -= 1
         await self.update(interaction)
 
     @discord.ui.button(emoji="➡️", style=discord.ButtonStyle.blurple)
