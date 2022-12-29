@@ -146,5 +146,5 @@ def create_text_file(name: str, content: str):
     discord.File
         The file object.
     """
-    buffer = BytesIO(content.encode("utf-8"))
+    buffer = BytesIO(str(content).encode("utf-8"))
     return discord.File(buffer, f"{name}.txt")

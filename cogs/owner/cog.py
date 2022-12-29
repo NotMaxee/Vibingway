@@ -201,7 +201,7 @@ class Owner(Cog):
         files = []
 
         if output:
-            if len(output) > 1000:
+            if len(str(output)) > 1000:
                 files.append(string.create_text_file("output", output))
                 truncated = string.truncate(output, 1000)
                 fields.append(dict(name="Output", value=f"```\n{truncated}```"))
@@ -209,7 +209,7 @@ class Owner(Cog):
                 fields.append(dict(name="Output", value=f"```\n{output}```"))
 
         if returned:
-            if len(returned) > 1000:
+            if len(str(returned)) > 1000:
                 files.append(string.create_text_file("returned", returned))
                 truncated = string.truncate(returned, 1000)
                 fields.append(dict(name="Return Value", value=f"```\n{truncated}```"))
