@@ -326,11 +326,17 @@ class Music(Cog):
             # Other URL.
             else:
                 results = await self.node.get_tracks(query=source, cls=wavelink.Track)
-                tracks.append(results[0])
+                if len(results) > 0:
+                    tracks.append(results[0])
+                else:
+                    raise Failure("I could not find any usable music under that URL.")
 
         # Youtube search.
         else:
             results = await wavelink.YouTubeTrack.search(source)
+            if len(results) == 0:
+                raise Failure("I could not find any music for the given search term.")
+
             options = {string.truncate(track.title, 80): track for track in results[:5]}
             view = io.Choice(interaction.user, options=options)
             
