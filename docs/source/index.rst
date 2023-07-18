@@ -10,6 +10,7 @@ Welcome to Vibingway's documentation!
    :caption: Guides
 
    guides/installation
+   guides/installation_docker
 
 .. toctree::
    :maxdepth: 1
