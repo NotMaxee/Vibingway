@@ -1,7 +1,7 @@
-FROM python:3.11-alpine
+FROM python:3.11
 
-# Create non-root user and switch to it
-RUN adduser -D -s /sbin/nologin vibingway
+# Create non-root user and switch to it (system user, no login)
+RUN useradd --create-home --shell /sbin/nologin -r vibingway
 USER vibingway
 
 # Set working directory
