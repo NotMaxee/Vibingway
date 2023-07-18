@@ -1,0 +1,52 @@
+version: '3'
+
+services:
+  # Vibingway
+  bot:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      - db
+      - db-migrate
+      - lavalink
+    volumes:
+      - ./config.py:/app/config.py
+
+  # Database
+  db:
+    image: postgres:15
+    restart: unless-stopped
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=vibingway
+      - POSTGRES_DB=vibingway
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Database migrator
+  db-migrate:
+    image: postgres:15
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - POSTGRES_CONNECTION_STRING=postgresql://postgres:vibingway@db:5432/vibingway
+    volumes:
+      - ./data:/data
+      - db-data:/migration-data
+    entrypoint: [ "/data/docker/migrate-db.bash" ]
+
+  # Lavalink
+  lavalink:
+    image: ghcr.io/lavalink-devs/lavalink:3
+    restart: unless-stopped
+    volumes:
+      - ./data/docker/lavalink.yml:/opt/Lavalink/application.yml
+
+volumes:
+  db-data:
