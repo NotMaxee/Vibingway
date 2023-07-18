@@ -46,7 +46,7 @@ Setup
 
 Clone the repository locally and change into the directory you cloned it into.
 
-Next, create a ``config.py`` file and copy the contents of ``config.example`` into it. You will need to change the following values so that the database and lavalink can connect to each other using the docker network:
+Next, create a ``config.py`` file and copy the contents of ``config.template`` into it. You will need to change the following values so that the database and lavalink can connect to each other using the docker network:
 
 .. code::
     database_credentials = dict(
