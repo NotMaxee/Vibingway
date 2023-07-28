@@ -21,6 +21,7 @@ def setup_logging():
     stream_handler = logging.StreamHandler(stream=sys.stdout)
     file_handler = logging.handlers.RotatingFileHandler(
         os.path.join(log_dir, "vibingway.log"),
+        maxBytes=10_000_000,
         backupCount=7,
         encoding="utf-8",
     )
