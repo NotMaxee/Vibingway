@@ -2,6 +2,7 @@
 __pycache__
 logs
 docs/build
+.vscode
 
 # Files
 lavalink/Lavalink.jar

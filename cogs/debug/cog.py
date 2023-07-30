@@ -26,7 +26,7 @@ class Debug(Cog):
 
             # Built-in errors.
             commands.BotMissingPermissions: handle_bot_missing_permissions,
-            
+            commands.CheckFailure: handle_check_failure,
 
             # Custom errors.
             Failure: handle_failure,

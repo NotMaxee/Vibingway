@@ -3,7 +3,23 @@
 Welcome to Vibingway's documentation!
 =====================================
 
-.. todo:: Add brief description.
+.. note::
+
+   **Hey there!** Please note that this documentation, much like this project,
+   is unfinished. While it can help you set up the bot or find an API reference,
+   it may be incomplete.
+
+Welcome to the documentation for **Vibingway**, a multipurpose Discord bot for
+small communities written in `Python 3.11`_ using `discord.py`_, `Lavalink`_ 
+and `wavelink`_.
+
+.. _Python 3.11: https://www.python.org/
+.. _discord.py: https://discordpy.readthedocs.io/en/stable/
+.. _Lavalink: https://github.com/lavalink-devs/Lavalink
+.. _wavelink: https://wavelink.dev/en/latest/
+
+If you want to host an instance of Vibingway yourself, please refer to the
+following guides for manual installation or installation using docker.
 
 .. toctree::
    :maxdepth: 1
@@ -11,6 +27,11 @@ Welcome to Vibingway's documentation!
 
    guides/installation
    guides/installation_docker
+
+If you are a developer and are looking for an API reference, check out the
+core and cogs sections below. The core section concerns itself with the central
+bot class, custom exceptions and utilities. For a reference for the various
+command modules, check out the cogs section instead.
 
 .. toctree::
    :maxdepth: 1

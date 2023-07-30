@@ -23,17 +23,23 @@ class Playlist:
         The guild this playlist is for.
     node: wavelink.Node
         The node to use to resolve track info.
-    tracks: list[wavelink.Track]
+    tracks: Optional[list[wavelink.GenericTrack]]
         A list of tracks in the playlist.
     """
-    def __init__(self, bot, guild, node, tracks):
+    def __init__(
+        self, 
+        bot: "Vibingway", 
+        guild: discord.Guild, 
+        node: wavelink.Node, 
+        tracks: list[wavelink.GenericTrack]=None
+    ):
         self.log = logging.getLogger(f"{__name__}[{guild}]")
         self.bot = bot
         self.guild: discord.Guild = guild
         self.node: wavelink.Node = node
 
         # Track and playlist information.
-        self._tracks: list[wavelink.Track] = tracks
+        self._tracks: list[wavelink.GenericTrack] = tracks or list()
         self._position = -1 if len(self._tracks) == 0 else 0
         self._repeat: Repeat = Repeat.OFF
 
@@ -60,12 +66,12 @@ class Playlist:
         return self._position
 
     @property
-    def current(self) -> Optional[wavelink.Track]:
+    def current(self) -> Optional[wavelink.GenericTrack]:
         """Get the track at the current position.
         
         Returns
         -------
-        Optional[wavelink.Track]
+        Optional[wavelink.GenericTrack]
             The track or :obj:`None` if the playlist is empty.
         """
         try:
@@ -74,8 +80,8 @@ class Playlist:
             return None
 
     @property
-    def tracks(self) -> list[wavelink.Track]:
-        """list[wavelink.Track]: A list of tracks in the playlist."""
+    def tracks(self) -> list[wavelink.GenericTrack]:
+        """list[wavelink.GenericTrack]: A list of tracks in the playlist."""
         return self._tracks
 
     @property
@@ -87,7 +93,7 @@ class Playlist:
 
     # Track management.
 
-    def get_track(self, position: int) -> Optional[wavelink.Track]:
+    def get_track(self, position: int) -> Optional[wavelink.GenericTrack]:
         """Get a track from the playlist.
         
         Parameters
@@ -97,7 +103,7 @@ class Playlist:
         
         Returns
         -------
-        Optional[wavelink.Track]
+        Optional[wavelink.GenericTrack]
             The track or :obj:`None` if no track exists at the given
             position.
         """
@@ -106,24 +112,24 @@ class Playlist:
         except IndexError:
             return None
 
-    async def add_track(self, track: wavelink.Track):
+    def add_track(self, track: wavelink.GenericTrack):
         """Add a single track to the playlist.
         
         Parameters
         ----------
-        track: wavelink.Track
+        track: wavelink.GenericTrack
             The track to add.
         """
         self.tracks.append(track)
         if self._position == -1:
             self._position = 0
 
-    async def add_tracks(self, tracks: list[wavelink.Track]):
+    def add_tracks(self, tracks: list[wavelink.GenericTrack]):
         """Add multiple tracks to the playlist at once.
         
         Parameters
         ----------
-        tracks: list[wavelink.Track]
+        tracks: list[wavelink.GenericTrack]
             The tracks to add.
         """
         self.log.info(f"Adding {len(tracks)} tracks.")
@@ -134,12 +140,12 @@ class Playlist:
             if self._position == -1:
                 self._position = 0
 
-    async def remove_track(self, position: int):
+    def remove_track(self, position: int):
         """Remove the track at the given position of the playlist.
         
         Returns
         -------
-        Optional[wavelink.Track]
+        Optional[wavelink.GenericTrack]
             The removed track or :obj:`None` if no track exists at
             the given position.
         """
@@ -152,18 +158,18 @@ class Playlist:
         except IndexError:
             return None
 
-    async def clear(self):
+    def clear(self):
         """Empty the playlist."""
         self.tracks.clear()
         self._position = -1
 
-    async def shuffle(self):
+    def shuffle(self):
         """Randomize the playlist order."""
         random.shuffle(self.tracks)
 
     # Settings management.
 
-    async def set_repeat(self, repeat: Repeat):
+    def set_repeat(self, repeat: Repeat):
         """Set the repeat mode of the playlist.
         
         Parameters
@@ -185,13 +191,13 @@ class Playlist:
         else:
             return self.position + 1 < self.length
 
-    async def get_next(self) -> Optional[wavelink.Track]:
+    def get_next(self) -> Optional[wavelink.GenericTrack]:
         """Get the next track from the playlist, based on the position.
-        
+
         Returns
         -------
-        wavelink.Track
-            The next track in the playlist or :obj:``None` if there is no
+        Optional[wavelink.GenericTrack]
+            The next track in the playlist or :obj:``None`` if there is no
             next track.
         """
         if self.length == 0:
@@ -207,7 +213,7 @@ class Playlist:
         
         return self.current
 
-    async def set_position(self, position: int) -> Optional[wavelink.Track]:
+    def set_position(self, position: int) -> Optional[wavelink.GenericTrack]:
         """Set the position of the playlist and return the track at the given position.
         
         Parameters
@@ -218,7 +224,7 @@ class Playlist:
 
         Returns
         -------
-        wavelink.Track
+        Optional[wavelink.GenericTrack]
             The track at the given position or :obj:`None` if the playlist
             is empty.
         """

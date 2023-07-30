@@ -55,7 +55,7 @@ todo_emit_warnings = False
 
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
-    "wavelink": ("https://wavelink.readthedocs.io/en/latest/", None),
+    "wavelink": ("https://wavelink.dev/en/latest/", None),
     "discord.py": ("https://discordpy.readthedocs.io/en/latest/", None),
     "asyncpg": ("https://magicstack.github.io/asyncpg/current/", None),
     "aiohttp": ("https://aiohttp.readthedocs.io/en/stable/", None),
@@ -92,8 +92,8 @@ html_theme_options = {
     "sticky_navigation": False,
 }
 
-html_favicon = os.path.join("_images", "html_favicon.png")
-html_logo = os.path.join("_images", "html_logo.png")
+html_favicon = None # os.path.join("_images", "html_favicon.png")
+html_logo = None # os.path.join("_images", "html_logo.png")
 
 html_scaled_image_link = False
 

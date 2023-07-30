@@ -23,3 +23,6 @@ async def handle_warning(interaction: discord.Interaction, error: commands.BotMi
 
 async def handle_failure(interaction: discord.Interaction, error: commands.BotMissingPermissions):
     return io.failure(str(error))
+
+async def handle_check_failure(interaction: discord.Interaction, error: commands.CheckFailure):
+    return io.failure(f"You do not meet the requirements to use  this command.\n\n**Error:** {error}")

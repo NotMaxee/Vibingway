@@ -208,6 +208,11 @@ To check the output of the server you can use ``journalctl -u lavalink.service -
 Create the PostgreSQL Database
 ******************************
 
+.. todo::
+
+    Write an alternative step that does not rely on pgAdmin and works through
+    the unix terminal instead.
+
 To connect the database we are going to use pgAdmin with SSH tunneling.
 
 Open pgAdmin and create a new server with the following settings:

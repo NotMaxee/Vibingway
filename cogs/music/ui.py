@@ -1,6 +1,5 @@
 import discord
 from .player import PlaylistPlayer
-from .playlist import Playlist
 from core.utils import io, string
 
 class PlaylistView(discord.ui.View):
@@ -49,7 +48,7 @@ class PlaylistView(discord.ui.View):
             title = string.truncate(track.title, 80)
             url = track.uri
             
-            if self.player.track == track:
+            if self.player.current == track:
                 lines.append("__" + format.format(position=position, title=title, url=url) + "__")
             else:
                 lines.append(format.format(position=position, title=title, url=url))

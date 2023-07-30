@@ -1,7 +1,10 @@
 .. _core_utils:
 
-Utilities
-#########
+``core.utilities``
+##################
+
+The utilities package provides various helpers and utilities that are
+used by the command modules of the bot.
 
 Database Helpers
 ****************
@@ -12,7 +15,7 @@ Exit Codes
 **********
 
 .. autoclass:: core.utils.exitcodes.ExitCodes
-        :members:
+    :members:
 
 Embed and Message Helpers
 *************************
@@ -37,4 +40,4 @@ String Helpers
 
 .. autofunction:: core.utils.string.truncate
 .. autofunction:: core.utils.string.human_join
-.. autofunction:: core.utils.string.format_seconds
+.. autofunction:: core.utils.string.format_milliseconds

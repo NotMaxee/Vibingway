@@ -1,7 +1,9 @@
 .. _cogs_music:
 
-Music
-#####
+``cogs.music``
+##############
+
+.. todo:: Properly document the music module.
 
 Cog
 ***

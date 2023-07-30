@@ -26,8 +26,7 @@ wavelink_id = "vibingway"
 
 # The credentials for the lavalink server.
 lavalink_credentials = dict(
-    host="localhost",
-    port=2333,
+    uri="https://localhost:2333",
     password="vibingway",
 )
 

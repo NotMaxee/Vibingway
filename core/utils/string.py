@@ -2,7 +2,7 @@ import discord
 from io import BytesIO
 
 
-__all__ = ("ELLIPSIS", "truncate", "human_join", "format_seconds", "create_text_file")
+__all__ = ("ELLIPSIS", "truncate", "human_join", "format_milliseconds", "create_text_file")
 
 ELLIPSIS = "…"
 """The ellipsis character used for :func:`utils.string.truncate`."""
@@ -106,12 +106,12 @@ def human_join(items, bold=False, code=False, concatenator="and"):
     return "{} {} {}".format(", ".join(items[:-1]), concatenator, items[-1])
 
 
-def format_seconds(seconds: (int | float)):
-    """Returns a human readable string representation of the given amount of seconds.
+def format_milliseconds(milliseconds: (int | float)):
+    """Returns a human readable string representation of the given amount of milliseconds.
 
     Parameters
     ----------
-    seconds: Union[int, float]
+    milliseconds: Union[int, float]
         An amount of seconds.
 
     Returns
@@ -119,7 +119,7 @@ def format_seconds(seconds: (int | float)):
     str
         A string in the form of ``hh:mm:ss`` or ``mm:ss`` if there are no hours.
     """
-    seconds = round(seconds)
+    seconds = round(milliseconds / 1000)
     hours, seconds = divmod(seconds, 3600)
     minutes, seconds = divmod(seconds, 60)
 

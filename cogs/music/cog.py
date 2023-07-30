@@ -10,11 +10,9 @@ from discord.ext.commands import Bot, Cog
 from core.errors import Failure, Warning
 from core.utils import io, string
 
-from .enums import Repeat
 from .player import PlaylistPlayer
-from .playlist import Playlist
+from .enums import Repeat, TrackType
 from .ui import PlaylistView
-
 
 class Music(Cog):
     """Cog for music commands."""
@@ -25,42 +23,38 @@ class Music(Cog):
         # Internal setup.
         self.log = logging.getLogger(__name__)
         self.bot = bot
-        self.timeout: int = 300
         self.node: wavelink.Node = None
-        self.node_region = None
         self.node_id = self.bot.config.wavelink_id
 
-        # Create the setup task. Commands can not be used before this
-        # task has been completed.
+        # Create the setup task. Commands that rely on the wavelink node
+        # can not be used before this task has been completed.
         self._setup = self.bot.loop.create_task(self.setup())
         self._setup.add_done_callback(self.setup_complete)
 
     async def setup(self):
-        # The initial setup for this cog. This is ran when the bot is
-        # restarting ot the module is being hot-swapped.
+        # The initial setup for this cog, which is ran everytime the
+        # bot restarts or this module is hot-swapped. Creates the
+        # lavalink node used by all music-related commands.
         await self.bot.wait_until_ready()
 
-        # Connect to lavalink.
+        # Create the node reference.
         self.log.info("Connecting to lavalink server...")
         try:
-            self.node = wavelink.NodePool.get_node(
-                identifier=self.node_id,
-                region=self.node_region)
-            
+            self.node = wavelink.NodePool.get_node(id=self.node_id)
             self.log.info("Reusing existing node.")
-        except (wavelink.ZeroConnectedNodes, wavelink.NoMatchingNode):
-            self.log.info("Creating new node.")
-
-            self.node = await wavelink.NodePool.create_node(
-                bot=self.bot,
-                identifier=self.node_id,
-                region=self.node_region,
-                **self.bot.config.lavalink_credentials
-            )
+        except (wavelink.InvalidNode):
+            self.log.info(f"Creating new node with id {self.node_id}.")
+            self.node = wavelink.Node(id=self.node_id, **self.bot.config.lavalink_credentials)
+            await wavelink.NodePool.connect(client=self.bot, nodes=[self.node])
 
         # Find stale voice connections without a player and terminate them.
+        # These can occur when the bot is improperly restarted and reconnects
+        # to Discord before getting automatically kicked from a voice channel.
         for guild in self.bot.guilds:
             for voice in guild.voice_channels:
+
+                # If the bot is in the voice call but we don't have a player,
+                # terminate the voice connection to clean up.
                 if self.bot.user in voice.members:
                     player = self.get_player(guild)
 
@@ -71,13 +65,14 @@ class Music(Cog):
                             await client.disconnect()
                         except:
                             pass
-                    
+
     def setup_complete(self, task: asyncio.Task):
-        # Handle errors that might occur while connecting to wavelink.
+        # Handle errors that might occur while creating the wavelink node.
         if not task.exception():
             self.log.info("Setup completed.")
             return
-
+        
+        # Handle errors.
         error = task.exception()
         self.log.error("An error occured while setting up!", exc_info=error)
 
@@ -91,50 +86,35 @@ class Music(Cog):
 
     @Cog.listener()
     async def on_wavelink_node_ready(self, node: wavelink.Node):
-        self.log.info(f"Node {node.identifier} is ready.")
+        self.log.info(f"Wavelink node {node.id!r} is ready.")
 
     @Cog.listener()
-    async def on_wavelink_track_start(self, player: PlaylistPlayer, track: wavelink.Track):
-        self.log.info(f"PlaylistPlayer {player!r} started playing {track.title!r}.")
-
-        # NOTE: When removing the monkey patches in __init__.py the following
-        # line may be required, unless the following bug in wavelink has been fixed.
-        # https://github.com/PythonistaGuild/Wavelink/issues/156.
-        # 
-        # player._source = track
+    async def on_wavelink_track_start(self, payload: wavelink.TrackEventPayload):
+        self.log.info(f"Player {payload.player!r} started playing {payload.track.title}.")
 
         try:
+            track = payload.track
             embed = io.message(f"Now playing [`{track.title}`]({track.uri}).")
-            await player.text.send(embed=embed)
+            await payload.player.text_channel.send(embed=embed)
         except Exception as err:
-            self.log.error("Unable to send notification.", exc_info=err)
+            self.log.error("Unable to send now playing notification.", exc_info=err)
 
     @Cog.listener()
-    async def on_wavelink_track_end(self, player: PlaylistPlayer, track: wavelink.Track, reason: str):
-        self.log.info(f"PlaylistPlayer {player!r} finished playing {track.title!r} ({reason}).")
-
-        # When playback is stopped don't continue playing.
-        if reason in ("STOPPED", "REPLACED"):
+    async def on_wavelink_track_end(self, payload: wavelink.TrackEventPayload):
+        self.log.info(f"Player {payload.player!r} finished playing {payload.track.title}.")
+        
+        # Ignore stop events caused by /music stop or /music play.
+        if payload.reason in ("STOPPED", "REPLACED"):
             return
 
         # Try to play the next track in the playlist.
-        await player.play_next()
-
-    @Cog.listener()
-    async def on_wavelink_track_exception(self, player: PlaylistPlayer, track: wavelink.Track, error):
-        self.log.info(f"PlaylistPlayer {player!r} encountered an error playing {track.title!r}: {error}")
-        await player.play_next()
-
-    @Cog.listener()
-    async def on_wavelink_track_stuck(self, player: PlaylistPlayer, track: wavelink.Track, threshold):
-        self.log.info(f"PlaylistPlayer {player!r} is stuck playing {track.title!r} (threshold: {threshold}).")
-        await player.play_next()
+        await payload.player.play_next()
 
     @Cog.listener()
     async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
-        
+
         # Leave the voice channel after the last user leaves.
-        if not member.bot and after.channel is None:
+        if not member.bot and after.channel != before.channel:
             if not [m for m in before.channel.members if not m.bot]:
 
                 # Check if there is a player for this guild / channel.
@@ -172,7 +152,7 @@ class Music(Cog):
                 await player.move_to(after.channel)
                 embed = io.message(f"Moved to {after.channel.mention}.")
                 try:
-                    await player.text.send(embed=embed)
+                    await player.text_channel.send(embed=embed)
                 except:
                     pass
 
@@ -180,7 +160,7 @@ class Music(Cog):
 
     def check_wavelink_ready(self):
         """Checks if wavelink is ready."""
-        if self.node is None:
+        if self.node is None or self.node.status != wavelink.NodeStatus.CONNECTED:
             raise Failure("Just a moment, I'm still getting things ready...")
 
     def check_can_use_voice_command(self, interaction: discord.Interaction, same_channel: bool=True):
@@ -191,7 +171,7 @@ class Music(Cog):
         same_channel: bool
             When :obj:`True` also checks whether the user is connected to the
             same voice channel as the bot. Defaults to :obj:`True`."""
-        player: PlaylistPlayer = self.get_player(interaction.guild)
+        player: wavelink.Player = self.get_player(interaction.guild)
 
         if not interaction.user.voice or interaction.user.voice.channel is None:
             raise Failure("You are not connected to a voice channel.")
@@ -249,15 +229,15 @@ class Music(Cog):
         await voice.connect(cls=player)
         return player
 
-    def get_player(self, guild: discord.Guild) -> Optional[PlaylistPlayer]:
+    def get_player(self, guild: discord.Guild) -> Optional[wavelink.Player]:
         """Get the player for a guild.
         
         Returns
         -------
-        Optional[PlaylistPlayer]
+        Optional[wavelink.Player]
             The player or :obj:`None` if no player exists for this guild.
         """
-        return self.node.get_player(guild) or guild.voice_client
+        return self.node.get_player(guild.id) or guild.voice_client
 
     async def cleanup_player(self, player: Optional[PlaylistPlayer]):
         """Attempt to disconnect and clean up a player.
@@ -274,9 +254,9 @@ class Music(Cog):
         if player is None:
             return
         
-        embed = io.message(f"Disconnected from {player.channel.mention}.")
+        embed = io.message(f"Disconnected from {player.last_voice_channel.mention}.")
         try:
-            await player.text.send(embed=embed)
+            await player.text_channel.send(embed=embed)
         except:
             pass
 
@@ -285,7 +265,7 @@ class Music(Cog):
         except:
             player.cleanup()
 
-    async def resolve_tracks(self, interaction: discord.Interaction, source:str) -> list[wavelink.Track]:
+    async def resolve_tracks(self, interaction: discord.Interaction, source:str) -> list[wavelink.GenericTrack]:
         """Attempt to find one or more tracks for a given source string.
         
         Parameters
@@ -297,10 +277,10 @@ class Music(Cog):
         
         Returns
         -------
-        list[wavelink.Track]
+        list[wavelink.GenericTrack]
             A list of tracks.
         """
-        tracks: list[wavelink.Track] = list()
+        tracks: list[wavelink.GenericTrack] = list()
 
         if source.startswith("https://"):
 
@@ -325,7 +305,7 @@ class Music(Cog):
 
             # Other URL.
             else:
-                results = await self.node.get_tracks(query=source, cls=wavelink.Track)
+                results = await self.node.get_tracks(query=source, cls=wavelink.GenericTrack)
                 if len(results) > 0:
                     tracks.append(results[0])
                 else:
@@ -378,11 +358,11 @@ class Music(Cog):
         # Check if the provided channel is empty.
         elif channel and not [m for m in channel.members if not m.bot]:
             raise Failure("There are no listeners in that voice channel.")
-
+        
         # Move existing player.
         channel = channel or interaction.user.voice.channel
         self.check_can_connect(channel)
-        player: PlaylistPlayer = channel.guild.voice_client
+        player: wavelink.Player = channel.guild.voice_client
         if player:
             if player.channel == channel:
                 embed = io.success(f"I'm already connected to {channel.mention}.")
@@ -391,7 +371,7 @@ class Music(Cog):
                 await player.move_to(channel)
                 embed = io.success(f"Moved to {channel.mention}.")
                 await interaction.response.send_message(embed=embed)
-        
+
         # Create a new player.
         else:
             await self.create_player(interaction.channel, channel)
@@ -404,8 +384,9 @@ class Music(Cog):
         player = self.get_player(interaction.guild)
 
         if player:
+            channel = player.channel
             await player.disconnect()
-            embed = io.success(f"Disconnected from {player.channel.mention}.")
+            embed = io.success(f"Disconnected from {channel.mention}.")
             await interaction.response.send_message(embed=embed)
         else:
             embed = io.failure(f"I am not connected to any voice channels.")
@@ -452,20 +433,20 @@ class Music(Cog):
             embed = io.success(f"Playing playlist from position {position}.")
             await interaction.response.send_message(embed=embed)
 
-            track = await player.playlist.set_position(actual)
+            track = player.playlist.set_position(actual)
             await player.play(track)
             return
 
         # If a source is specified we look it up and add it to the playlist.
         try:
-            tracks: list[wavelink.Track] = await self.resolve_tracks(interaction, source)
-        except wavelink.LoadTrackError:
+            tracks: list[wavelink.GenericTrack] = await self.resolve_tracks(interaction, source)
+        except wavelink.WavelinkException:
             raise Failure("I could not find any usable music under that URL.")
         
         # Add tracks to playlist.
         play_next = (player.playlist.length != 0)
         position = player.playlist.length + 1
-        await player.playlist.add_tracks(tracks)
+        player.playlist.add_tracks(tracks)
         
         if not player.is_playing():
             if play_next:
@@ -491,14 +472,15 @@ class Music(Cog):
 
         # Find player.
         player: PlaylistPlayer = self.get_player(interaction.guild)
-        if not player or not player.is_playing():
+        if not player:
             raise Failure("I am not playing anything.")
-
-        if player.is_paused():
+        elif player.is_paused():
             raise Failure("Playback is already paused.")
+        elif not player.is_playing():
+            raise Failure("I am not playing anything.")
         else:
             await player.pause()
-            embed = io.success(f"Paused playback of `{player.source.title}`.")
+            embed = io.success(f"Paused playback of `{player.current.title}`.")
             await interaction.response.send_message(embed=embed)
 
     @music.command(name="resume", description="Resume the currently paused track.")
@@ -508,15 +490,14 @@ class Music(Cog):
 
         # Find player.
         player: PlaylistPlayer = self.get_player(interaction.guild)
-        if not player or not player.is_playing():
+        if not player:
             raise Failure("I am not playing anything.")
-
-        if not player.is_paused():
+        elif not player.is_paused() or player.is_playing():
             raise Failure("Playback is not paused.")
-        else:
-            await player.resume()
-            embed = io.success(f"Resumed playback of `{player.source.title}`.")
-            await interaction.response.send_message(embed=embed)
+
+        await player.resume()
+        embed = io.success(f"Resumed playback of `{player.current.title}`.")
+        await interaction.response.send_message(embed=embed)
 
     @music.command(name="stop", description="Stop playback.")
     async def music_stop(self, interaction: discord.Interaction):
@@ -528,11 +509,11 @@ class Music(Cog):
         if not player or not player.is_playing():
             raise Failure("I am not playing anything.")
         
-        track = player.source
+        track = player.current
 
         await player.stop()
 
-        embed = io.success(f"Stopped playback of `{track.title}`.")
+        embed = io.success(f"Stopped playback of [`{track.title}`]({track.uri}).")
         await interaction.response.send_message(embed=embed)
 
     @music.command(name="seek", description="Seek to a position in the current track.")
@@ -560,11 +541,12 @@ class Music(Cog):
         seconds = seconds if seconds is not None else 0
 
         seconds = seconds + minutes * 60 + hours * 3600
-        await player.seek(seconds * 1000)
+        milliseconds = seconds * 1000
+        await player.seek(milliseconds)
 
         # Send message.
-        track = player.track
-        position = string.format_seconds(seconds)
+        track = player.current
+        position = string.format_milliseconds(milliseconds)
         embed = io.success(f"Skipped [`{track.title}`]({track.uri}) to position `{position}`.")
         await interaction.response.send_message(embed=embed)
 
@@ -578,7 +560,7 @@ class Music(Cog):
         if not player or not player.is_playing():
             raise Failure("I am not playing anything.")
 
-        track = player.source
+        track = player.current
         
         if player.playlist.has_next():
             await player.play_next()
@@ -618,7 +600,7 @@ class Music(Cog):
         if position > player.playlist.length:
             raise Failure(f"You must specify a position within the playlist range (max: {player.playlist.length}).")
         
-        track = await player.playlist.remove_track(position-1)
+        track = player.playlist.remove_track(position-1)
         
         embed = io.success(f"Removed [`{track.title}`]({track.uri}) from the playlist.")
         await interaction.response.send_message(embed=embed)
@@ -644,7 +626,7 @@ class Music(Cog):
             raise Failure("The interaction timed out.")
         
         if view.value:
-            await player.playlist.clear()
+            player.playlist.clear()
             embed = io.success(f"Removed {count} track(s) from the playlist.")
             await interaction.followup.send(embed=embed)
         else:
@@ -663,7 +645,7 @@ class Music(Cog):
         if not player.is_playing():
             raise Failure("I am not playing anything at the moment.")
 
-        track = player.track
+        track = player.current
         title = track.title
         url = track.uri
 
@@ -673,8 +655,8 @@ class Music(Cog):
         except:
             position = "#???"
 
-        elapsed = string.format_seconds(player.position)
-        duration = string.format_seconds(track.duration)
+        elapsed = string.format_milliseconds(player.position)
+        duration = string.format_milliseconds(track.duration)
 
         description = f"{position} [`{title}`]({url}) ({elapsed} / {duration})"
         embed: discord.Embed = io.message(description)
@@ -707,7 +689,7 @@ class Music(Cog):
         # Change repeat mode.
         mode = Repeat(mode.value)
         self.log.info(f"Setting repeat for {player} to {mode}.")
-        await player.playlist.set_repeat(mode)
+        player.playlist.set_repeat(mode)
 
         if mode == Repeat.OFF:
             embed = io.success("Repeating is now disabled.")

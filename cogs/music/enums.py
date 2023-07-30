@@ -1,9 +1,9 @@
 import enum
 
 
-
 class Repeat(enum.StrEnum):
     """An enumerator over the different repeat modes."""
+
     #: Disables repeating the playlist.
     OFF = "off"
 
@@ -13,8 +13,9 @@ class Repeat(enum.StrEnum):
     #: Loops the current track.
     TRACK = "track"
 
+
 class TrackType(enum.IntEnum):
-    """A list of track types."""
+    """An enumerator over the different track types."""
 
     #: Youtube tracks.
     YOUTUBE = 0
