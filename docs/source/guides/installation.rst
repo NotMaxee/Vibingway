@@ -221,7 +221,7 @@ Open pgAdmin and create a new server with the following settings:
 .. image:: ../_images/guides/pgadmin_ssl_tunnel.png
 
 Once done open the vibingway database we created previously and use the query
-tool to run the queries defined in ``data/schema.sql``.
+tool to run the SQL files found in ``data/db/`` starting with ``1-initdb.sql``.
 
 Install Python Modules
 **********************

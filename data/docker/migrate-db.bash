@@ -2,8 +2,12 @@
 
 # Define the path to migration files as the key and the path to the
 # file that indicates the migration has been ran as the value
+#!/bin/bash
+
+# Define the path to migration files as the key and the path to the
+# file that indicates the migration has been ran as the value
 declare -A migrations
-migrations["/data/db/schema.sql"]="/migration-data/complete/schema.sql"
+migrations["/data/db/1-initdb.sql"]="/migration-data/complete/1-initdb.sql"
 
 # Run migrations
 for migration in "${!migrations[@]}"; do
