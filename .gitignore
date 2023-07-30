@@ -5,6 +5,6 @@ docs/build
 .vscode
 
 # Files
-lavalink/Lavalink.jar
-lavalink/java17.exe
+data/lavalink/Lavalink.jar
+data/lavalink/java17.exe
 config.py

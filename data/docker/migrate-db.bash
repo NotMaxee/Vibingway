@@ -3,7 +3,7 @@
 # Define the path to migration files as the key and the path to the
 # file that indicates the migration has been ran as the value
 declare -A migrations
-migrations["/data/schema.sql"]="/migration-data/complete/schema.sql"
+migrations["/data/db/schema.sql"]="/migration-data/complete/schema.sql"
 
 # Run migrations
 for migration in "${!migrations[@]}"; do

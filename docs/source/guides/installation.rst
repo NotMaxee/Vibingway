@@ -184,8 +184,8 @@ Run the following to create a directory for the lavalink server:
 
 .. code::
 
-    cd /home/vibingway/vibingway/lavalink
-    wget https://github.com/freyacodes/Lavalink/releases/download/3.7.5/Lavalink.jar 
+    cd /home/vibingway/vibingway/data/lavalink
+    wget https://github.com/freyacodes/Lavalink/releases/download/3.7.7/Lavalink.jar 
 
 You should now a ``Lavalink.jar`` that can be used to run a lavalink server.
 
@@ -197,7 +197,7 @@ Run the following to copy the service preset and enable the lavalink server:
 
 .. code::
 
-    sudo cp /home/vibingway/vibingway/data/lavalink.service /etc/systemd/system/lavalink.service
+    sudo cp /home/vibingway/vibingway/data/systemd/lavalink.service /etc/systemd/system/lavalink.service
     sudo systemctl daemon-reload
     sudo systemctl enable lavalink.service
     sudo systemctl start lavalink.service
@@ -252,7 +252,7 @@ Finally we create the service to run the bot.
 
 .. code::
 
-    sudo cp /home/vibingway/vibingway/data/vibingway.service /etc/systemd/system/vibingway.service
+    sudo cp /home/vibingway/vibingway/data/systemd/vibingway.service /etc/systemd/system/vibingway.service
     sudo systemctl daemon-reload
     sudo systemctl enable vibingway.service
     sudo systemctl start vibingway.service
