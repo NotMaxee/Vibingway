@@ -46,7 +46,7 @@ services:
     image: ghcr.io/lavalink-devs/lavalink:3
     restart: unless-stopped
     volumes:
-      - ./data/lavalink/lavalink.yml:/opt/Lavalink/application.yml
+      - ./data/lavalink/application.yml:/opt/Lavalink/application.yml
 
 volumes:
   db-data:
