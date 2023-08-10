@@ -43,7 +43,7 @@ The bot requires a set of prerequisites to be installed on the server to run.
 These prerequisites are:
 
 * Python 3.11 or higher
-* Lavalink 3.7.5
+* Lavalink 3.7.8 or higher
 * PostgreSQL 
 
 Before going through the following steps run ``sudo apt update`` once to ensure
@@ -185,7 +185,7 @@ Run the following to create a directory for the lavalink server:
 .. code::
 
     cd /home/vibingway/vibingway/data/lavalink
-    wget https://github.com/freyacodes/Lavalink/releases/download/3.7.7/Lavalink.jar 
+    wget https://github.com/freyacodes/Lavalink/releases/download/3.7.8/Lavalink.jar 
 
 You should now a ``Lavalink.jar`` that can be used to run a lavalink server.
 

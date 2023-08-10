@@ -115,7 +115,8 @@ class Music(Cog):
 
         # Leave the voice channel after the last user leaves.
         if not member.bot and after.channel != before.channel:
-            if not [m for m in before.channel.members if not m.bot]:
+
+            if before.channel != None and not [m for m in before.channel.members if not m.bot]:
 
                 # Check if there is a player for this guild / channel.
                 player: PlaylistPlayer = self.get_player(member.guild)
